@@ -1,0 +1,3 @@
+# hbaseorm
+hbase的orm轻量级框架。
+可以使用原生API也可以通过spring方式引入。只需一行代码解决hbase冗余的各种取值

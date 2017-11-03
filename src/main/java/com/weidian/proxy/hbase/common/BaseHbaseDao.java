@@ -4,6 +4,7 @@ import com.weidian.proxy.hbase.annotation.ColName;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.filter.BinaryComparator;
 import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
@@ -405,7 +406,8 @@ public abstract class BaseHbaseDao<T> {
     public Filter getOutFilter(Class filterClazz, String columnFamily, String quafilier, CompareFilter.CompareOp compareOp,String value) {
 
         if(SingleColumnValueFilter.class == filterClazz) {
-            return new SingleColumnValueFilter(Bytes.toBytes(columnFamily), Bytes.toBytes(quafilier),compareOp,Bytes.toBytes(value));
+            BinaryComparator binaryComparator = new BinaryComparator(Bytes.toBytes(value));
+            return new SingleColumnValueFilter(Bytes.toBytes(columnFamily), Bytes.toBytes(quafilier),compareOp,binaryComparator);
         }
         return null;
 

@@ -261,7 +261,7 @@ public class NativeHbaseDao<T> extends BaseHbaseDao<T>{
         configuration.set("hbase.master","10.8.97.167");
         configuration.set("hbase.zookeeper.property.clientPort","2182");
 
-        NativeHbaseDao<TestEntity> nativeHbaseDao = new NativeHbaseDao(configuration,1,1);
+        NativeHbaseDao nativeHbaseDao = new NativeHbaseDao(configuration,1,1);
 
 
 //        List<RowKeyEntity> rowKeyEntities = new ArrayList<RowKeyEntity>();

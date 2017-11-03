@@ -133,7 +133,9 @@ public class NativeHbaseDao<T> extends BaseHbaseDao<T>{
         Table table = connection.getTable(tableName);
         List<Filter> filters = new ArrayList<>(2);
         filters.add(new PrefixFilter(rowPrifix.getBytes()));
-        filters.add(new PageFilter(offset));
+        if(offset > 0) {
+            filters.add(new PageFilter(offset));
+        }
         FilterList list = new FilterList(FilterList.Operator.MUST_PASS_ALL, filters);
 
         Scan s = new Scan();
@@ -168,7 +170,9 @@ public class NativeHbaseDao<T> extends BaseHbaseDao<T>{
         Table table = connection.getTable(tableName);
         List<Filter> filters = new ArrayList<>(2);
         filters.add(new PrefixFilter(rowPrifix.getBytes()));
-        filters.add(new PageFilter(offset));
+        if(offset > 0) {
+            filters.add(new PageFilter(offset));
+        }
         if(outFilters != null && outFilters.size() > 0) {
             filters.addAll(outFilters);
         }
@@ -294,33 +298,24 @@ public class NativeHbaseDao<T> extends BaseHbaseDao<T>{
     public static void main(String[] args) throws Exception{
 
         Configuration configuration = HBaseConfiguration.create();
-        configuration.set("hbase.zookeeper.quorum","10.8.97.167");
-        configuration.set("hbase.master","10.8.97.167");
-        configuration.set("hbase.zookeeper.property.clientPort","2182");
-
+        if(args.length == 0) {
+            configuration.set("hbase.zookeeper.quorum", "10.8.97.167");
+            configuration.set("hbase.master", "10.8.97.167");
+            configuration.set("hbase.zookeeper.property.clientPort", "2182");
+        } else {
+            configuration.set("hbase.zookeeper.quorum", args[0]);
+            configuration.set("hbase.master", args[1]);
+            configuration.set("hbase.zookeeper.property.clientPort", args[2]);
+        }
         NativeHbaseDao nativeHbaseDao = new NativeHbaseDao(configuration,1,1);
 
 
-//        List<RowKeyEntity> rowKeyEntities = new ArrayList<RowKeyEntity>();
-//        RowKeyEntity rowKeyEntity = new RowKeyEntity();
-//        rowKeyEntity.setRowkey("090137068_860731090_9223370527263043807_395985");
-//        rowKeyEntity.setCf("cf");
-//        rowKeyEntities.add(rowKeyEntity);
-//        List<TestEntity> testEntities = null;
-//        try {
-//            testEntities = nativeHbaseDao.scanDataByRowkeys(TestEntity.class, "mesa:ods_buyer_bhv_info_n","cf","090137068_860731090","090137068_860731090_9223370527263043807",2L);
-//            for(TestEntity testEntity : testEntities) {
-//                String json = testEntity.getJSON();
-//                JSONObject jsonObject = JSON.parseObject(json);
-//                String contents = jsonObject.getString("content");
-//
-//                JSONObject content = JSONObject.parseObject(contents);
-//                String url = content.getString("url");
-//                System.out.println(url);
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+//       nativeHbaseDao.putData("mesa:ods_buyer_bhv_info_n","cf","JSON","158374538_982706362_9223370531724167803","{\"sellerId\":\"835473851\",\"feedTime\":\"1505130608000\",\"feedType\":\"1020\",\"description\":\"\\xE5\\xB7\\xB2\\xE6\\x94\\xAF\\xE4\\xBB\\x98\",\"from\":\"1\",\"buyerId\":\"982706362\"}");
+//       nativeHbaseDao.putData("mesa:ods_buyer_bhv_info_n","cf","actionType","158374538_982706362_9223370531724167803","103");
+//       nativeHbaseDao.putData("mesa:ods_buyer_bhv_info_n","cf","JSON","158374538_982706362_9223370533813003806","{\"sellerId\":\"835473851\",\"feedTime\":\"1505130608000\",\"feedType\":\"1020\",\"description\":\"\\xE5\\xB7\\xB2\\xE6\\x94\\xAF\\xE4\\xBB\\x98\",\"from\":\"1\",\"buyerId\":\"982706362\"}");
+//       nativeHbaseDao.putData("mesa:ods_buyer_bhv_info_n","cf","actionType","158374538_982706362_9223370533813003806","106");
+//       nativeHbaseDao.putData("mesa:ods_buyer_bhv_info_n","cf","JSON","158374538_982706362_9223370533950204808","{\"sellerId\":\"835473851\",\"feedTime\":\"1505130608000\",\"feedType\":\"1020\",\"description\":\"\\xE5\\xB7\\xB2\\xE6\\x94\\xAF\\xE4\\xBB\\x98\",\"from\":\"1\",\"buyerId\":\"982706362\"}");
+//       nativeHbaseDao.putData("mesa:ods_buyer_bhv_info_n","cf","actioinType","158374538_982706362_9223370533950204808","108");
 
         for(int i = 0; i < 1; i++) {
             new Thread(new TestThread(nativeHbaseDao,i)).start();
@@ -356,7 +351,7 @@ class TestThread implements Runnable {
             }
             List<Filter> filters = new ArrayList<Filter>();
             filters.add(singleColumnValueFilter);
-            testEntities = nativeHbaseDao.scanDataByRowkeysWithFilters(TestEntity.class, "mesa:ods_buyer_bhv_info_n","090137068_860731090","090137068_860731090",2L,filters);
+            testEntities = nativeHbaseDao.scanDataByRowkeysWithFilters(TestEntity.class, "mesa:ods_buyer_bhv_info_n","158374538_982706362","158374538_982706362",1L,filters);
             System.out.println(i+"  "+testEntities.toString());
         } catch (Exception e) {
             e.printStackTrace();

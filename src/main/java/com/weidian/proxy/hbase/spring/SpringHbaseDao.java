@@ -89,7 +89,9 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                 List<T> objects = new ArrayList<T>(offset.intValue());
                 List<Filter> filters = new ArrayList<>(2);
                 filters.add(new PrefixFilter(rowPrifix.getBytes()));
-                filters.add(new PageFilter(offset));
+                if(offset > 0) {
+                    filters.add(new PageFilter(offset));
+                }
                 if(outFilters != null && outFilters.size() > 0) {
                     filters.addAll(outFilters);
                 }
@@ -130,7 +132,9 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                 List<T> objects = new ArrayList<T>(offset.intValue());
                 List<Filter> filters = new ArrayList<>(2);
                 filters.add(new PrefixFilter(rowPrifix.getBytes()));
-                filters.add(new PageFilter(offset));
+                if(offset > 0) {
+                    filters.add(new PageFilter(offset));
+                }
                 FilterList list = new FilterList(FilterList.Operator.MUST_PASS_ALL, filters);
 
                 Scan s = new Scan();
@@ -169,7 +173,9 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                 List<T> objects = new ArrayList<T>(offset.intValue());
                 List<Filter> filters = new ArrayList<>(2);
                 filters.add(new PrefixFilter(rowPrifix.getBytes()));
-                filters.add(new PageFilter(offset));
+                if(offset > 0) {
+                    filters.add(new PageFilter(offset));
+                }
                 if(outFilters != null && outFilters.size() > 0) {
                     filters.addAll(outFilters);
                 }
@@ -214,7 +220,9 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                 Scan s = new Scan();
                 s.setStartRow(Bytes.toBytes(startRowKey));
                 s.setStopRow(Bytes.toBytes(endRowKey));
-                s.setFilter(new PageFilter(limit));
+                if(limit > 0) {
+                    s.setFilter(new PageFilter(limit));
+                }
                 s.setCaching(100);
                 ResultScanner rs = hTableInterface.getScanner(s);
 
@@ -250,7 +258,9 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
 
 
                 List<Filter> filters = new ArrayList<>(2);
-                filters.add(new PageFilter(limit));
+                if(limit > 0) {
+                    filters.add(new PageFilter(limit));
+                }
                 if(outFilters != null && outFilters.size() > 0) {
                     filters.addAll(outFilters);
                 }

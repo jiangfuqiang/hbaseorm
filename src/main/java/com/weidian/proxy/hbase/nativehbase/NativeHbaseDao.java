@@ -174,6 +174,34 @@ public class NativeHbaseDao<T> extends BaseHbaseDao<T>{
         table.close();
     }
 
+    /**
+     * get a connection from queue
+     * @return
+     * @throws Exception
+     */
+    public Connection getConnection() throws Exception{
+        Connection connection = hbaseConnectionPool.getConnection();
+        if(connection == null) {
+            try {
+                boolean flag = createConnection();
+                if(flag) {
+                    connection = hbaseConnectionPool.getConnection();
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
+        if(connection == null) {
+            LOGGER.error("no more connection can get..... ");
+            throw new NoConnectionException("no more connection can get");
+        }
+        return connection;
+    }
+
     private void enqueueConnection(Connection connection) throws InterruptedException {
         if(connection != null) {
             hbaseConnectionPool.queueConn(connection);
@@ -226,33 +254,7 @@ public class NativeHbaseDao<T> extends BaseHbaseDao<T>{
         return flag;
     }
 
-    /**
-     * get a connection from queue
-     * @return
-     * @throws Exception
-     */
-    private Connection getConnection() throws Exception{
-        Connection connection = hbaseConnectionPool.getConnection();
-        if(connection == null) {
-            try {
-                boolean flag = createConnection();
-                if(flag) {
-                    connection = hbaseConnectionPool.getConnection();
-                }
 
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-        }
-        if(connection == null) {
-            LOGGER.error("no more connection can get..... ");
-            throw new NoConnectionException("no more connection can get");
-        }
-        return connection;
-    }
 
     public static void main(String[] args) throws Exception{
 

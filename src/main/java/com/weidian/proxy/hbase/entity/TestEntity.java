@@ -70,6 +70,8 @@ public class TestEntity extends BaseHbaseEntity {
     private Long lastPayTime;
 
     private String JSON;
+    @ColName(name="actionType")
+    private int feedType;
 
     public long getId() {
         return id;
@@ -266,5 +268,13 @@ public class TestEntity extends BaseHbaseEntity {
 
     public void setJSON(String JSON) {
         this.JSON = JSON;
+    }
+
+    public int getFeedType() {
+        return feedType;
+    }
+
+    public void setFeedType(int feedType) {
+        this.feedType = feedType;
     }
 }

@@ -12,10 +12,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
-import org.apache.hadoop.hbase.filter.Filter;
-import org.apache.hadoop.hbase.filter.FilterList;
-import org.apache.hadoop.hbase.filter.PageFilter;
-import org.apache.hadoop.hbase.filter.PrefixFilter;
+import org.apache.hadoop.hbase.filter.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,6 +134,44 @@ public class NativeHbaseDao<T> extends BaseHbaseDao<T>{
         List<Filter> filters = new ArrayList<>(2);
         filters.add(new PrefixFilter(rowPrifix.getBytes()));
         filters.add(new PageFilter(offset));
+        FilterList list = new FilterList(FilterList.Operator.MUST_PASS_ALL, filters);
+
+        Scan s = new Scan();
+        s.setStartRow(Bytes.toBytes(startRowKey));
+        s.setFilter(list);
+        s.setCaching(100);
+        ResultScanner rs = table.getScanner(s);
+
+        parseHbaseResult(rs,objects,startRowKey,clazz);
+
+        rs.close();
+
+        return objects;
+    }
+
+    /**
+     * scan的分页查询
+     * @param clazz
+     * @param tableN
+     * @param rowPrifix
+     * @param startRowKey
+     * @param offset
+     * @return
+     */
+    public List<T> scanDataByRowkeysWithFilters(final Class clazz,
+                                     final String tableN,
+                                     final String rowPrifix, final String startRowKey,
+                                                final Long offset,List<Filter> outFilters) throws Exception{
+        List<T> objects = new ArrayList<T>(offset.intValue());
+        Connection connection = getConnection();
+        TableName tableName = TableName.valueOf(tableN);
+        Table table = connection.getTable(tableName);
+        List<Filter> filters = new ArrayList<>(2);
+        filters.add(new PrefixFilter(rowPrifix.getBytes()));
+        filters.add(new PageFilter(offset));
+        if(outFilters != null && outFilters.size() > 0) {
+            filters.addAll(outFilters);
+        }
         FilterList list = new FilterList(FilterList.Operator.MUST_PASS_ALL, filters);
 
         Scan s = new Scan();
@@ -287,7 +322,7 @@ public class NativeHbaseDao<T> extends BaseHbaseDao<T>{
 //            e.printStackTrace();
 //        }
 
-        for(int i = 0; i < 2000; i++) {
+        for(int i = 0; i < 1; i++) {
             new Thread(new TestThread(nativeHbaseDao,i)).start();
         }
     }
@@ -312,7 +347,16 @@ class TestThread implements Runnable {
         rowKeyEntities.add(rowKeyEntity);
         List<TestEntity> testEntities = null;
         try {
-            testEntities = nativeHbaseDao.getDataByRowkeys(TestEntity.class, rowKeyEntities, "mesa:mds_seller_order_buyer_type");
+            Filter filter = nativeHbaseDao.getOutFilter(SingleColumnValueFilter.class,"cf",
+                    "actionType", CompareFilter.CompareOp.EQUAL,
+                    "103");
+            SingleColumnValueFilter singleColumnValueFilter = null;
+            if(filter != null) {
+                singleColumnValueFilter = (SingleColumnValueFilter)filter;
+            }
+            List<Filter> filters = new ArrayList<Filter>();
+            filters.add(singleColumnValueFilter);
+            testEntities = nativeHbaseDao.scanDataByRowkeysWithFilters(TestEntity.class, "mesa:ods_buyer_bhv_info_n","090137068_860731090","090137068_860731090",2L,filters);
             System.out.println(i+"  "+testEntities.toString());
         } catch (Exception e) {
             e.printStackTrace();

@@ -4,6 +4,9 @@ import com.weidian.proxy.hbase.annotation.ColName;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.filter.CompareFilter;
+import org.apache.hadoop.hbase.filter.Filter;
+import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -397,5 +400,14 @@ public abstract class BaseHbaseDao<T> {
             }
         }
         return object;
+    }
+
+    public Filter getOutFilter(Class filterClazz, String columnFamily, String quafilier, CompareFilter.CompareOp compareOp,String value) {
+
+        if(SingleColumnValueFilter.class == filterClazz) {
+            return new SingleColumnValueFilter(Bytes.toBytes(columnFamily), Bytes.toBytes(quafilier),compareOp,Bytes.toBytes(value));
+        }
+        return null;
+
     }
 }

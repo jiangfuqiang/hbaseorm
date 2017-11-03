@@ -78,6 +78,48 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
      * @param offset
      * @return
      */
+    public List<T> scanDataByRowkeysWithFilter(final Class clazz,
+                                     final String tableName,
+                                     final String rowPrifix, final String startRowKey, final Long offset,
+                                               final List<Filter> outFilters) {
+        List<T> objects = new ArrayList<T>(offset.intValue());
+        objects = hbaseTemplate.execute(tableName, new TableCallback<List<T>>() {
+            @Override
+            public List<T> doInTable(HTableInterface hTableInterface) throws Throwable {
+                List<T> objects = new ArrayList<T>(offset.intValue());
+                List<Filter> filters = new ArrayList<>(2);
+                filters.add(new PrefixFilter(rowPrifix.getBytes()));
+                filters.add(new PageFilter(offset));
+                if(outFilters != null && outFilters.size() > 0) {
+                    filters.addAll(outFilters);
+                }
+                FilterList list = new FilterList(FilterList.Operator.MUST_PASS_ALL, filters);
+
+                Scan s = new Scan();
+                s.setStartRow(Bytes.toBytes(startRowKey));
+                s.setFilter(list);
+                s.setCaching(100);
+                ResultScanner rs = hTableInterface.getScanner(s);
+
+                parseHbaseResult(rs,objects,startRowKey,clazz);
+
+                rs.close();
+
+                return objects;
+            }
+        });
+        return objects;
+    }
+
+    /**
+     * scan的分页查询
+     * @param clazz
+     * @param tableName
+     * @param rowPrifix
+     * @param startRowKey
+     * @param offset
+     * @return
+     */
     public List<T> scanDataByRowkeys(final Class clazz,
                                                    final String tableName,
                                                    final String rowPrifix, final String startRowKey, final Long offset) {
@@ -89,6 +131,48 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                 List<Filter> filters = new ArrayList<>(2);
                 filters.add(new PrefixFilter(rowPrifix.getBytes()));
                 filters.add(new PageFilter(offset));
+                FilterList list = new FilterList(FilterList.Operator.MUST_PASS_ALL, filters);
+
+                Scan s = new Scan();
+                s.setStartRow(Bytes.toBytes(startRowKey));
+                s.setFilter(list);
+                s.setCaching(100);
+                ResultScanner rs = hTableInterface.getScanner(s);
+
+                parseHbaseResult(rs,objects,startRowKey,clazz);
+
+                rs.close();
+
+                return objects;
+            }
+        });
+        return objects;
+    }
+
+    /**
+     * scan的分页查询
+     * @param clazz
+     * @param tableName
+     * @param rowPrifix
+     * @param startRowKey
+     * @param offset
+     * @return
+     */
+    public List<T> scanDataByRowkeysWithFilters(final Class clazz,
+                                                final String tableName,
+                                                final String rowPrifix, final String startRowKey, final Long offset,
+                                                final List<Filter> outFilters) {
+        List<T> objects = new ArrayList<T>(offset.intValue());
+        objects = hbaseTemplate.execute(tableName, new TableCallback<List<T>>() {
+            @Override
+            public List<T> doInTable(HTableInterface hTableInterface) throws Throwable {
+                List<T> objects = new ArrayList<T>(offset.intValue());
+                List<Filter> filters = new ArrayList<>(2);
+                filters.add(new PrefixFilter(rowPrifix.getBytes()));
+                filters.add(new PageFilter(offset));
+                if(outFilters != null && outFilters.size() > 0) {
+                    filters.addAll(outFilters);
+                }
                 FilterList list = new FilterList(FilterList.Operator.MUST_PASS_ALL, filters);
 
                 Scan s = new Scan();
@@ -131,6 +215,50 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                 s.setStartRow(Bytes.toBytes(startRowKey));
                 s.setStopRow(Bytes.toBytes(endRowKey));
                 s.setFilter(new PageFilter(limit));
+                s.setCaching(100);
+                ResultScanner rs = hTableInterface.getScanner(s);
+
+                parseHbaseResult(rs,objects,startRowKey,clazz);
+
+                rs.close();
+
+                return objects;
+            }
+        });
+        return objects;
+    }
+
+    /**
+     * scan的范围查询
+     * @param clazz
+     * @param tableName
+     * @param columnFamily
+     * @param startRowKey
+     * @param endRowKey
+     * @param limit
+     * @return
+     */
+    public List<T> scanDataRangeByRowkeysWithFilters(final Class clazz,
+                                          final String tableName, final String columnFamily,
+                                          final String startRowKey, final String endRowKey, final Long limit,
+                                                    final List<Filter> outFilters) {
+        List<T> objects = new ArrayList<T>(limit.intValue());
+        objects = hbaseTemplate.execute(tableName, new TableCallback<List<T>>() {
+            @Override
+            public List<T> doInTable(HTableInterface hTableInterface) throws Throwable {
+                List<T> objects = new ArrayList<T>(limit.intValue());
+
+
+                List<Filter> filters = new ArrayList<>(2);
+                filters.add(new PageFilter(limit));
+                if(outFilters != null && outFilters.size() > 0) {
+                    filters.addAll(outFilters);
+                }
+                FilterList list = new FilterList(FilterList.Operator.MUST_PASS_ALL, filters);
+                Scan s = new Scan();
+                s.setStartRow(Bytes.toBytes(startRowKey));
+                s.setStopRow(Bytes.toBytes(endRowKey));
+                s.setFilter(list);
                 s.setCaching(100);
                 ResultScanner rs = hTableInterface.getScanner(s);
 

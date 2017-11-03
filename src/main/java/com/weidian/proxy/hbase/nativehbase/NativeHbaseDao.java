@@ -32,9 +32,10 @@ public class NativeHbaseDao<T> extends BaseHbaseDao<T>{
 
     private volatile static HbaseConnectionPool hbaseConnectionPool = null;
     private Configuration configuration = null;
+    private static Object lock = new Object();
 
     public NativeHbaseDao(Configuration configuration) {
-        synchronized (this) {
+        synchronized (lock) {
             if(hbaseConnectionPool == null) {
                 hbaseConnectionPool = new HbaseConnectionPool();
             }
@@ -51,7 +52,7 @@ public class NativeHbaseDao<T> extends BaseHbaseDao<T>{
     }
 
     public NativeHbaseDao(Configuration configuration,int poolSize,int maxPoolSize) {
-        synchronized (this) {
+        synchronized (lock) {
             if(hbaseConnectionPool == null) {
                 hbaseConnectionPool = new HbaseConnectionPool(poolSize,maxPoolSize);
             }
@@ -284,7 +285,7 @@ public class NativeHbaseDao<T> extends BaseHbaseDao<T>{
 //            e.printStackTrace();
 //        }
 
-        for(int i = 0; i < 2; i++) {
+        for(int i = 0; i < 2000; i++) {
             new Thread(new TestThread(nativeHbaseDao,i)).start();
         }
     }

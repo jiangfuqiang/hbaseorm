@@ -127,7 +127,7 @@ public class NativeHbaseDao<T> extends BaseHbaseDao<T>{
     public List<T> scanDataByRowkeys(final Class clazz,
                                      final String tableN,
                                      final String rowPrifix, final String startRowKey, final Long offset) throws Exception{
-        List<T> objects = new ArrayList<T>(offset.intValue());
+        List<T> objects = new ArrayList<T>();
         Connection connection = getConnection();
         TableName tableName = TableName.valueOf(tableN);
         Table table = connection.getTable(tableName);
@@ -164,7 +164,8 @@ public class NativeHbaseDao<T> extends BaseHbaseDao<T>{
                                      final String tableN,
                                      final String rowPrifix, final String startRowKey,
                                                 final Long offset,List<Filter> outFilters) throws Exception{
-        List<T> objects = new ArrayList<T>(offset.intValue());
+
+        List<T> objects = new ArrayList<T>();
         Connection connection = getConnection();
         TableName tableName = TableName.valueOf(tableN);
         Table table = connection.getTable(tableName);
@@ -351,7 +352,7 @@ class TestThread implements Runnable {
             }
             List<Filter> filters = new ArrayList<Filter>();
             filters.add(singleColumnValueFilter);
-            testEntities = nativeHbaseDao.scanDataByRowkeysWithFilters(TestEntity.class, "mesa:ods_buyer_bhv_info_n","158374538_982706362","158374538_982706362",1L,filters);
+            testEntities = nativeHbaseDao.scanDataByRowkeysWithFilters(TestEntity.class, "mesa:ods_buyer_bhv_info_n","158374538_982706362","158374538_982706362",-1L,filters);
             System.out.println(i+"  "+testEntities.toString());
         } catch (Exception e) {
             e.printStackTrace();

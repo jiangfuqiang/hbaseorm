@@ -82,11 +82,11 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                                      final String tableName,
                                      final String rowPrifix, final String startRowKey, final Long offset,
                                                final List<Filter> outFilters) {
-        List<T> objects = new ArrayList<T>(offset.intValue());
+        List<T> objects = new ArrayList<T>();
         objects = hbaseTemplate.execute(tableName, new TableCallback<List<T>>() {
             @Override
             public List<T> doInTable(HTableInterface hTableInterface) throws Throwable {
-                List<T> objects = new ArrayList<T>(offset.intValue());
+                List<T> objects = new ArrayList<T>();
                 List<Filter> filters = new ArrayList<>(2);
                 filters.add(new PrefixFilter(rowPrifix.getBytes()));
                 if(offset > 0) {
@@ -125,11 +125,11 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
     public List<T> scanDataByRowkeys(final Class clazz,
                                                    final String tableName,
                                                    final String rowPrifix, final String startRowKey, final Long offset) {
-        List<T> objects = new ArrayList<T>(offset.intValue());
+        List<T> objects = new ArrayList<T>();
         objects = hbaseTemplate.execute(tableName, new TableCallback<List<T>>() {
             @Override
             public List<T> doInTable(HTableInterface hTableInterface) throws Throwable {
-                List<T> objects = new ArrayList<T>(offset.intValue());
+                List<T> objects = new ArrayList<T>();
                 List<Filter> filters = new ArrayList<>(2);
                 filters.add(new PrefixFilter(rowPrifix.getBytes()));
                 if(offset > 0) {
@@ -166,11 +166,11 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                                                 final String tableName,
                                                 final String rowPrifix, final String startRowKey, final Long offset,
                                                 final List<Filter> outFilters) {
-        List<T> objects = new ArrayList<T>(offset.intValue());
+        List<T> objects = new ArrayList<T>();
         objects = hbaseTemplate.execute(tableName, new TableCallback<List<T>>() {
             @Override
             public List<T> doInTable(HTableInterface hTableInterface) throws Throwable {
-                List<T> objects = new ArrayList<T>(offset.intValue());
+                List<T> objects = new ArrayList<T>();
                 List<Filter> filters = new ArrayList<>(2);
                 filters.add(new PrefixFilter(rowPrifix.getBytes()));
                 if(offset > 0) {
@@ -210,11 +210,11 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
     public List<T> scanDataRangeByRowkeys(final Class clazz,
                                      final String tableName, final String columnFamily,
                                      final String startRowKey, final String endRowKey, final Long limit) {
-        List<T> objects = new ArrayList<T>(limit.intValue());
+        List<T> objects = new ArrayList<T>();
         objects = hbaseTemplate.execute(tableName, new TableCallback<List<T>>() {
             @Override
             public List<T> doInTable(HTableInterface hTableInterface) throws Throwable {
-                List<T> objects = new ArrayList<T>(limit.intValue());
+                List<T> objects = new ArrayList<T>();
 
 
                 Scan s = new Scan();
@@ -250,11 +250,11 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                                           final String tableName, final String columnFamily,
                                           final String startRowKey, final String endRowKey, final Long limit,
                                                     final List<Filter> outFilters) {
-        List<T> objects = new ArrayList<T>(limit.intValue());
+        List<T> objects = new ArrayList<T>();
         objects = hbaseTemplate.execute(tableName, new TableCallback<List<T>>() {
             @Override
             public List<T> doInTable(HTableInterface hTableInterface) throws Throwable {
-                List<T> objects = new ArrayList<T>(limit.intValue());
+                List<T> objects = new ArrayList<T>();
 
 
                 List<Filter> filters = new ArrayList<>(2);

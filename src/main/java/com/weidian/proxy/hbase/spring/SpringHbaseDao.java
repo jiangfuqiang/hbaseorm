@@ -80,7 +80,7 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
      */
     public List<T> scanDataByRowkeysWithFilter(final Class clazz,
                                      final String tableName,
-                                     final String rowPrifix, final String startRowKey, final Long offset,
+                                     final String rowPrifix, final String startRowKey, final Long offset,final int limit,
                                                final List<Filter> outFilters) {
         List<T> objects = new ArrayList<T>();
         objects = hbaseTemplate.execute(tableName, new TableCallback<List<T>>() {
@@ -100,6 +100,9 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                 Scan s = new Scan();
                 s.setStartRow(Bytes.toBytes(startRowKey));
                 s.setFilter(list);
+                if(limit > 0) {
+                    s.setCaching(limit);
+                }
                 ResultScanner rs = hTableInterface.getScanner(s);
 
                 parseHbaseResult(rs,objects,startRowKey,clazz);
@@ -123,7 +126,8 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
      */
     public List<T> scanDataByRowkeys(final Class clazz,
                                                    final String tableName,
-                                                   final String rowPrifix, final String startRowKey, final Long offset) {
+                                                   final String rowPrifix, final String startRowKey, final Long offset,
+                                     final int limit) {
         List<T> objects = new ArrayList<T>();
         objects = hbaseTemplate.execute(tableName, new TableCallback<List<T>>() {
             @Override
@@ -139,6 +143,9 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                 Scan s = new Scan();
                 s.setStartRow(Bytes.toBytes(startRowKey));
                 s.setFilter(list);
+                if(limit > 0) {
+                    s.setCaching(limit);
+                }
                 ResultScanner rs = hTableInterface.getScanner(s);
 
                 parseHbaseResult(rs,objects,startRowKey,clazz);
@@ -163,7 +170,7 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
     public List<T> scanDataByRowkeysWithFilters(final Class clazz,
                                                 final String tableName,
                                                 final String rowPrifix, final String startRowKey, final Long offset,
-                                                final List<Filter> outFilters) {
+                                                final List<Filter> outFilters,final int limit) {
         List<T> objects = new ArrayList<T>();
         objects = hbaseTemplate.execute(tableName, new TableCallback<List<T>>() {
             @Override
@@ -182,6 +189,9 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                 Scan s = new Scan();
                 s.setStartRow(Bytes.toBytes(startRowKey));
                 s.setFilter(list);
+                if(limit > 0) {
+                    s.setCaching(limit);
+                }
                 ResultScanner rs = hTableInterface.getScanner(s);
 
                 parseHbaseResult(rs,objects,startRowKey,clazz);
@@ -218,7 +228,7 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                 s.setStartRow(Bytes.toBytes(startRowKey));
                 s.setStopRow(Bytes.toBytes(endRowKey));
                 if(limit > 0) {
-                    s.setFilter(new PageFilter(limit));
+                    s.setCaching(limit.intValue());
                 }
                 ResultScanner rs = hTableInterface.getScanner(s);
 
@@ -265,6 +275,9 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                 s.setStartRow(Bytes.toBytes(startRowKey));
                 s.setStopRow(Bytes.toBytes(endRowKey));
                 s.setFilter(list);
+                if(limit > 0) {
+                    s.setCaching(limit.intValue());
+                }
                 ResultScanner rs = hTableInterface.getScanner(s);
 
                 parseHbaseResult(rs,objects,startRowKey,clazz);

@@ -100,7 +100,6 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                 Scan s = new Scan();
                 s.setStartRow(Bytes.toBytes(startRowKey));
                 s.setFilter(list);
-                s.setCaching(100);
                 ResultScanner rs = hTableInterface.getScanner(s);
 
                 parseHbaseResult(rs,objects,startRowKey,clazz);
@@ -140,7 +139,6 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                 Scan s = new Scan();
                 s.setStartRow(Bytes.toBytes(startRowKey));
                 s.setFilter(list);
-                s.setCaching(100);
                 ResultScanner rs = hTableInterface.getScanner(s);
 
                 parseHbaseResult(rs,objects,startRowKey,clazz);
@@ -184,7 +182,6 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                 Scan s = new Scan();
                 s.setStartRow(Bytes.toBytes(startRowKey));
                 s.setFilter(list);
-                s.setCaching(100);
                 ResultScanner rs = hTableInterface.getScanner(s);
 
                 parseHbaseResult(rs,objects,startRowKey,clazz);
@@ -223,7 +220,6 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                 if(limit > 0) {
                     s.setFilter(new PageFilter(limit));
                 }
-                s.setCaching(100);
                 ResultScanner rs = hTableInterface.getScanner(s);
 
                 parseHbaseResult(rs,objects,startRowKey,clazz);
@@ -269,7 +265,6 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                 s.setStartRow(Bytes.toBytes(startRowKey));
                 s.setStopRow(Bytes.toBytes(endRowKey));
                 s.setFilter(list);
-                s.setCaching(100);
                 ResultScanner rs = hTableInterface.getScanner(s);
 
                 parseHbaseResult(rs,objects,startRowKey,clazz);

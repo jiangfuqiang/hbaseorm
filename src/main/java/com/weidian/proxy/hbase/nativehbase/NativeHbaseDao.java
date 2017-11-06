@@ -141,7 +141,6 @@ public class NativeHbaseDao<T> extends BaseHbaseDao<T>{
         Scan s = new Scan();
         s.setStartRow(Bytes.toBytes(startRowKey));
         s.setFilter(list);
-        s.setCaching(100);
         ResultScanner rs = table.getScanner(s);
 
         parseHbaseResult(rs,objects,startRowKey,clazz);
@@ -182,7 +181,6 @@ public class NativeHbaseDao<T> extends BaseHbaseDao<T>{
         Scan s = new Scan();
         s.setStartRow(Bytes.toBytes(startRowKey));
         s.setFilter(list);
-        s.setCaching(100);
         ResultScanner rs = table.getScanner(s);
 
         parseHbaseResult(rs,objects,startRowKey,clazz);

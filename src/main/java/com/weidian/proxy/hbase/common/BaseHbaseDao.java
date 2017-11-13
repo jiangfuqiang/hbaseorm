@@ -124,6 +124,7 @@ public abstract class BaseHbaseDao<T> {
                 try {
                     method.invoke(object, values);
                 } catch (InvocationTargetException e) {
+                    LOGGER.error("colName=" + colName + " " + key + " " + values.toString(),e);
                     throw new IllegalArgumentException(e.getMessage(),e);
                 }
 
@@ -176,6 +177,7 @@ public abstract class BaseHbaseDao<T> {
                     return new String(value,"UTF-8");
                 }
             case "int":
+            case "integer":
                 if(cell != null && offset + int_length <= value.length && (iv.indexOf("�") >= 0 || iv.indexOf("\u0000") >= 0)) {
                     return Bytes.toInt(CellUtil.cloneValue(cell));
                 } else {

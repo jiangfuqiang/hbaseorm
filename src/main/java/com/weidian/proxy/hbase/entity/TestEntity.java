@@ -24,6 +24,9 @@ public class TestEntity extends BaseHbaseEntity {
 
     private String buyerId;
 
+    @ColName(name="ic")
+    private Integer ic;
+
     private BigDecimal averageAmount = new BigDecimal(0);
 
     @ColName(name="purchase_amount")
@@ -71,7 +74,7 @@ public class TestEntity extends BaseHbaseEntity {
 
     private String JSON;
     @ColName(name="actionType")
-    private int feedType;
+    private Integer feedType;
 
     public long getId() {
         return id;
@@ -276,5 +279,13 @@ public class TestEntity extends BaseHbaseEntity {
 
     public void setFeedType(int feedType) {
         this.feedType = feedType;
+    }
+
+    public Integer getIc() {
+        return ic;
+    }
+
+    public void setIc(Integer ic) {
+        this.ic = ic;
     }
 }

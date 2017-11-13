@@ -336,7 +336,7 @@ class TestThread implements Runnable {
     public void run() {
         List<RowKeyEntity> rowKeyEntities = new ArrayList<RowKeyEntity>();
         RowKeyEntity rowKeyEntity = new RowKeyEntity();
-        rowKeyEntity.setRowkey("6078260511_1176405158_79828985");
+        rowKeyEntity.setRowkey("0675420211_2198291473_1188518066");
         rowKeyEntity.setCf("cf");
         rowKeyEntities.add(rowKeyEntity);
         List<TestEntity> testEntities = null;
@@ -350,7 +350,7 @@ class TestThread implements Runnable {
             }
             List<Filter> filters = new ArrayList<Filter>();
             filters.add(singleColumnValueFilter);
-            testEntities = nativeHbaseDao.scanDataByRowkeysWithFilters(TestEntity.class, "mesa:ods_buyer_bhv_info_n","158374538_982706362","158374538_982706362",-1L,filters);
+            testEntities = nativeHbaseDao.getDataByRowkeys(TestEntity.class,rowKeyEntities, "mesa:mds_seller_order_buyer_item_info");
             System.out.println(i+"  "+testEntities.toString());
         } catch (Exception e) {
             e.printStackTrace();

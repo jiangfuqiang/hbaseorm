@@ -1,0 +1,7 @@
+# Created by .ignore support plugin (hsz.mobi)
+.gitignore
+.idea/
+dihbase.iml
+readme.txt
+src/main/java/dihbase/
+target/

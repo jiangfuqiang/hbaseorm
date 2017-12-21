@@ -214,7 +214,15 @@ public abstract class BaseHbaseDao<T> {
                     }
                     return Long.parseLong(iv);
                 }
-
+            case "char":
+                if(cell != null  && offset + length <= value.length && (iv.indexOf("�") >= 0 || iv.indexOf("\u0000") >= 0)) {
+                    return Bytes.toInt(CellUtil.cloneValue(cell));
+                } else {
+                    if("".equals(iv)) {
+                        return null;
+                    }
+                    return iv.toString().charAt(0);
+                }
             case "short":
                 if(cell != null  && offset + short_length <= value.length && (iv.indexOf("�") >= 0 || iv.indexOf("\u0000") >= 0)) {
                     return Bytes.toShort(CellUtil.cloneValue(cell));
@@ -339,6 +347,8 @@ public abstract class BaseHbaseDao<T> {
             return Date.class;
         } else if(clazzName.equals("timestamp")) {
             return Timestamp.class;
+        } else if(clazzName.equals("char")) {
+            return char.class;
         }
         return null;
     }

@@ -3,6 +3,7 @@ package com.weidian.proxy.hbase.spring;
 import com.weidian.proxy.hbase.common.BaseHbaseDao;
 import com.weidian.proxy.hbase.entity.BaseHbaseEntity;
 import com.weidian.proxy.hbase.entity.RowKeyEntity;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.filter.Filter;
@@ -73,25 +74,25 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
      * scan的分页查询
      * @param clazz
      * @param tableName
-     * @param rowPrifix
      * @param startRowKey
-     * @param offset
      * @return
      */
     public List<T> scanDataByRowkeysWithFilter(final Class clazz,
                                      final String tableName,
-                                     final String rowPrifix, final String startRowKey, final Long offset,final int limit,
-                                               final List<Filter> outFilters) {
+                                     final String startRowKey,final String prefixRowkey,
+                                               final Long limit,
+                                               final List<Filter> outFilters,boolean isDesc) {
+        if(isDesc && StringUtils.isBlank(prefixRowkey)) {
+            throw new IllegalArgumentException("prefix rowkey must not empty with desc is true");
+        }
         List<T> objects = new ArrayList<T>();
         objects = hbaseTemplate.execute(tableName, new TableCallback<List<T>>() {
             @Override
             public List<T> doInTable(HTableInterface hTableInterface) throws Throwable {
                 List<T> objects = new ArrayList<T>();
                 List<Filter> filters = new ArrayList<>(2);
-                filters.add(new PrefixFilter(rowPrifix.getBytes()));
-                if(offset > 0) {
-                    filters.add(new PageFilter(offset));
-                }
+                filters.add(new PageFilter(limit));
+
                 if(outFilters != null && outFilters.size() > 0) {
                     filters.addAll(outFilters);
                 }
@@ -100,9 +101,7 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                 Scan s = new Scan();
                 s.setStartRow(Bytes.toBytes(startRowKey));
                 s.setFilter(list);
-                if(limit > 0) {
-                    s.setCaching(limit);
-                }
+
                 ResultScanner rs = hTableInterface.getScanner(s);
 
                 parseHbaseResult(rs,objects,startRowKey,clazz);
@@ -118,143 +117,93 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
     /**
      * scan的分页查询
      * @param clazz
-     * @param tableName
-     * @param rowPrifix
-     * @param startRowKey
-     * @param offset
+     * @param tableN
+     * @param maxRowKey
+     * @param limit
      * @return
      */
-    public List<T> scanDataByRowkeys(final Class clazz,
-                                                   final String tableName,
-                                                   final String rowPrifix, final String startRowKey, final Long offset,
-                                     final int limit) {
-        List<T> objects = new ArrayList<T>();
-        objects = hbaseTemplate.execute(tableName, new TableCallback<List<T>>() {
-            @Override
-            public List<T> doInTable(HTableInterface hTableInterface) throws Throwable {
-                List<T> objects = new ArrayList<T>();
-                List<Filter> filters = new ArrayList<>(2);
-                filters.add(new PrefixFilter(rowPrifix.getBytes()));
-                if(offset > 0) {
-                    filters.add(new PageFilter(offset));
-                }
-                FilterList list = new FilterList(FilterList.Operator.MUST_PASS_ALL, filters);
-
-                Scan s = new Scan();
-                s.setStartRow(Bytes.toBytes(startRowKey));
-                s.setFilter(list);
-                if(limit > 0) {
-                    s.setCaching(limit);
-                }
-                ResultScanner rs = hTableInterface.getScanner(s);
-
-                parseHbaseResult(rs,objects,startRowKey,clazz);
-
-                rs.close();
-
-                return objects;
-            }
-        });
-        return objects;
+    private List<T> scanDataByRowkeys(final Class clazz,
+                                      final String tableN,
+                                      final String maxRowKey, String prefixRowkey,final Long limit, boolean isDesc) throws Exception{
+        return scanDataByRowkeysWithFilter(clazz, tableN, maxRowKey, prefixRowkey, limit,null, isDesc);
     }
 
     /**
      * scan的分页查询
      * @param clazz
-     * @param tableName
-     * @param rowPrifix
-     * @param startRowKey
-     * @param offset
+     * @param tableN
+     * @param stopRowkey
+     * @param limit
      * @return
      */
-    public List<T> scanDataByRowkeysWithFilters(final Class clazz,
-                                                final String tableName,
-                                                final String rowPrifix, final String startRowKey, final Long offset,
-                                                final List<Filter> outFilters,final int limit) {
-        List<T> objects = new ArrayList<T>();
-        objects = hbaseTemplate.execute(tableName, new TableCallback<List<T>>() {
-            @Override
-            public List<T> doInTable(HTableInterface hTableInterface) throws Throwable {
-                List<T> objects = new ArrayList<T>();
-                List<Filter> filters = new ArrayList<>(2);
-                filters.add(new PrefixFilter(rowPrifix.getBytes()));
-                if(offset > 0) {
-                    filters.add(new PageFilter(offset));
-                }
-                if(outFilters != null && outFilters.size() > 0) {
-                    filters.addAll(outFilters);
-                }
-                FilterList list = new FilterList(FilterList.Operator.MUST_PASS_ALL, filters);
+    public List<T> scanDataByDescRowkeys(final Class clazz,
+                                         final String tableN,
+                                         final String stopRowkey, String prefixRowkey,final Long limit) throws Exception{
+        if(StringUtils.isBlank(prefixRowkey)) {
+            throw new IllegalArgumentException("prefix rowkey must not empty");
+        }
 
-                Scan s = new Scan();
-                s.setStartRow(Bytes.toBytes(startRowKey));
-                s.setFilter(list);
-                if(limit > 0) {
-                    s.setCaching(limit);
-                }
-                ResultScanner rs = hTableInterface.getScanner(s);
 
-                parseHbaseResult(rs,objects,startRowKey,clazz);
-
-                rs.close();
-
-                return objects;
-            }
-        });
-        return objects;
+        return this.scanDataByRowkeys(clazz,tableN,stopRowkey,prefixRowkey,limit,true);
     }
+
+    /**
+     * scan的分页查询
+     * @param clazz
+     * @param tableN
+     * @param stopRowkey
+     * @param limit
+     * @return
+     */
+    public List<T> scanDataByAscRowkeys(final Class clazz,
+                                        final String tableN,
+                                        final String stopRowkey, String prefixRowkey,final Long limit) throws Exception{
+
+        return this.scanDataByRowkeys(clazz,tableN,stopRowkey,prefixRowkey,limit,false);
+    }
+
+    /**
+     * scan的分页查询
+     * @param clazz
+     * @param tableN
+     * @param stopRowkey
+     * @param limit
+     * @return
+     */
+    public List<T> scanDataByAscRowkeys(final Class clazz,
+                                        final String tableN,
+                                        final String stopRowkey,final Long limit) throws Exception{
+
+        return this.scanDataByRowkeys(clazz,tableN,stopRowkey,"",limit,false);
+    }
+
+
 
     /**
      * scan的范围查询
      * @param clazz
      * @param tableName
-     * @param columnFamily
      * @param startRowKey
      * @param endRowKey
-     * @param limit
      * @return
      */
     public List<T> scanDataRangeByRowkeys(final Class clazz,
-                                     final String tableName, final String columnFamily,
-                                     final String startRowKey, final String endRowKey, final Long limit) {
-        List<T> objects = new ArrayList<T>();
-        objects = hbaseTemplate.execute(tableName, new TableCallback<List<T>>() {
-            @Override
-            public List<T> doInTable(HTableInterface hTableInterface) throws Throwable {
-                List<T> objects = new ArrayList<T>();
-
-
-                Scan s = new Scan();
-                s.setStartRow(Bytes.toBytes(startRowKey));
-                s.setStopRow(Bytes.toBytes(endRowKey));
-                if(limit > 0) {
-                    s.setCaching(limit.intValue());
-                }
-                ResultScanner rs = hTableInterface.getScanner(s);
-
-                parseHbaseResult(rs,objects,startRowKey,clazz);
-
-                rs.close();
-
-                return objects;
-            }
-        });
-        return objects;
+                                     final String tableName,
+                                     final String startRowKey, final String endRowKey) {
+       return scanDataRangeByRowkeysWithFilters(clazz,tableName,startRowKey,endRowKey,null);
     }
 
     /**
      * scan的范围查询
      * @param clazz
      * @param tableName
-     * @param columnFamily
      * @param startRowKey
      * @param endRowKey
-     * @param limit
      * @return
      */
     public List<T> scanDataRangeByRowkeysWithFilters(final Class clazz,
-                                          final String tableName, final String columnFamily,
-                                          final String startRowKey, final String endRowKey, final Long limit,
+                                          final String tableName,
+                                          final String startRowKey, final String endRowKey,
                                                     final List<Filter> outFilters) {
         List<T> objects = new ArrayList<T>();
         objects = hbaseTemplate.execute(tableName, new TableCallback<List<T>>() {
@@ -264,9 +213,7 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
 
 
                 List<Filter> filters = new ArrayList<>(2);
-                if(limit > 0) {
-                    filters.add(new PageFilter(limit));
-                }
+
                 if(outFilters != null && outFilters.size() > 0) {
                     filters.addAll(outFilters);
                 }
@@ -275,9 +222,6 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                 s.setStartRow(Bytes.toBytes(startRowKey));
                 s.setStopRow(Bytes.toBytes(endRowKey));
                 s.setFilter(list);
-                if(limit > 0) {
-                    s.setCaching(limit.intValue());
-                }
                 ResultScanner rs = hTableInterface.getScanner(s);
 
                 parseHbaseResult(rs,objects,startRowKey,clazz);

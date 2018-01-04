@@ -8,6 +8,7 @@ import com.weidian.proxy.hbase.common.exception.NoConnectionException;
 import com.weidian.proxy.hbase.entity.RowKeyEntity;
 import com.weidian.proxy.hbase.entity.TestEntity;
 import com.weidian.proxy.hbase.spring.SpringHbaseDao;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.TableName;
@@ -19,7 +20,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by jiang on 17/10/28.
@@ -119,71 +123,109 @@ public class NativeHbaseDao<T> extends BaseHbaseDao<T>{
      * scan的分页查询
      * @param clazz
      * @param tableN
-     * @param rowPrifix
-     * @param startRowKey
-     * @param offset
+     * @param maxRowKey
+     * @param limit
      * @return
      */
-    public List<T> scanDataByRowkeys(final Class clazz,
+    private List<T> scanDataByRowkeys(final Class clazz,
                                      final String tableN,
-                                     final String rowPrifix, final String startRowKey, final Long offset) throws Exception{
-        List<T> objects = new ArrayList<T>();
-        Connection connection = getConnection();
-        TableName tableName = TableName.valueOf(tableN);
-        Table table = connection.getTable(tableName);
-        List<Filter> filters = new ArrayList<>(2);
-        filters.add(new PrefixFilter(rowPrifix.getBytes()));
-        if(offset > 0) {
-            filters.add(new PageFilter(offset));
-        }
-        FilterList list = new FilterList(FilterList.Operator.MUST_PASS_ALL, filters);
-
-        Scan s = new Scan();
-        s.setStartRow(Bytes.toBytes(startRowKey));
-        s.setFilter(list);
-        ResultScanner rs = table.getScanner(s);
-
-        parseHbaseResult(rs,objects,startRowKey,clazz);
-
-        rs.close();
-
-        return objects;
+                                     final String maxRowKey, String prefixRowkey,final Long limit, boolean isDesc) throws Exception{
+        return scanDataByRowkeysWithFilters(clazz, tableN, maxRowKey, prefixRowkey, limit,null, isDesc);
     }
 
     /**
      * scan的分页查询
      * @param clazz
      * @param tableN
-     * @param rowPrifix
-     * @param startRowKey
-     * @param offset
+     * @param stopRowkey
+     * @param limit
+     * @return
+     */
+    public List<T> scanDataByDescRowkeys(final Class clazz,
+                                     final String tableN,
+                                     final String stopRowkey, String prefixRowkey,final Long limit) throws Exception{
+        if(StringUtils.isBlank(prefixRowkey)) {
+            throw new IllegalArgumentException("prefix rowkey must not empty with desc is true");
+        }
+
+
+        return this.scanDataByRowkeys(clazz,tableN,stopRowkey,prefixRowkey,limit,true);
+    }
+
+    /**
+     * scan的分页查询
+     * @param clazz
+     * @param tableN
+     * @param stopRowkey
+     * @param limit
+     * @return
+     */
+    public List<T> scanDataByAscRowkeys(final Class clazz,
+                                         final String tableN,
+                                         final String stopRowkey, String prefixRowkey,final Long limit) throws Exception{
+
+        return this.scanDataByRowkeys(clazz,tableN,stopRowkey,prefixRowkey,limit,false);
+    }
+
+    /**
+     * scan的分页查询
+     * @param clazz
+     * @param tableN
+     * @param stopRowkey
+     * @param limit
+     * @return
+     */
+    public List<T> scanDataByAscRowkeys(final Class clazz,
+                                        final String tableN,
+                                        final String stopRowkey,final Long limit) throws Exception{
+
+        return this.scanDataByRowkeys(clazz,tableN,stopRowkey,"",limit,false);
+    }
+
+    /**
+     * scan的分页查询
+     * @param clazz
+     * @param tableN
+     * @param maxRowKey
+     * @param limit
      * @return
      */
     public List<T> scanDataByRowkeysWithFilters(final Class clazz,
                                      final String tableN,
-                                     final String rowPrifix, final String startRowKey,
-                                                final Long offset,List<Filter> outFilters) throws Exception{
+                                     final String maxRowKey,
+                                                final String prefixRowkey,
+                                                final Long limit,List<Filter> outFilters,
+                                                boolean isDesc) throws Exception{
+        if(isDesc && StringUtils.isBlank(prefixRowkey)) {
+            throw new IllegalArgumentException("prefix rowkey must not empty with desc is true");
+        }
 
         List<T> objects = new ArrayList<T>();
         Connection connection = getConnection();
         TableName tableName = TableName.valueOf(tableN);
         Table table = connection.getTable(tableName);
         List<Filter> filters = new ArrayList<>(2);
-        filters.add(new PrefixFilter(rowPrifix.getBytes()));
-        if(offset > 0) {
-            filters.add(new PageFilter(offset));
+        if(limit > 0) {
+            filters.add(new PageFilter(limit));
         }
         if(outFilters != null && outFilters.size() > 0) {
             filters.addAll(outFilters);
         }
+        if(StringUtils.isNotBlank(prefixRowkey)) {
+            filters.add(new PrefixFilter(prefixRowkey.getBytes()));
+        }
         FilterList list = new FilterList(FilterList.Operator.MUST_PASS_ALL, filters);
-
         Scan s = new Scan();
-        s.setStartRow(Bytes.toBytes(startRowKey));
+
+        if(isDesc) {
+            s.setStopRow(Bytes.toBytes(maxRowKey));
+        } else {
+            s.setStartRow(Bytes.toBytes(maxRowKey));
+        }
         s.setFilter(list);
         ResultScanner rs = table.getScanner(s);
 
-        parseHbaseResult(rs,objects,startRowKey,clazz);
+        parseHbaseResult(rs,objects,prefixRowkey,clazz);
 
         rs.close();
 
@@ -249,7 +291,7 @@ public class NativeHbaseDao<T> extends BaseHbaseDao<T>{
     private void parseHbaseResult(ResultScanner rs, List<T> objects, String startRowKey, Class clazz) {
         for(Result result : rs) {
             String rowkey = Bytes.toString(result.getRow());
-            if(!rowkey.startsWith(startRowKey)) {
+            if(StringUtils.isNotBlank(startRowKey) && !rowkey.startsWith(startRowKey)) {
                 continue;
             }
             appendObject(rowkey,result,clazz,objects);
@@ -319,6 +361,16 @@ public class NativeHbaseDao<T> extends BaseHbaseDao<T>{
         for(int i = 0; i < 1; i++) {
             new Thread(new TestThread(nativeHbaseDao,i)).start();
         }
+
+//        ExecutorService executorService = Executors.newFixedThreadPool(1);
+//        for(int i = 0; i < 1; i++) {
+//            executorService.execute(new Runnable() {
+//                @Override
+//                public void run() {
+//                    System.out.println(Thread.currentThread().getName() + " " + new Date(0L));
+//                }
+//            });
+//        }
     }
 
 }
@@ -341,16 +393,16 @@ class TestThread implements Runnable {
         rowKeyEntities.add(rowKeyEntity);
         List<TestEntity> testEntities = null;
         try {
-            Filter filter = nativeHbaseDao.getOutFilter(SingleColumnValueFilter.class,"cf",
-                    "actionType", CompareFilter.CompareOp.EQUAL,
-                    "103");
-            SingleColumnValueFilter singleColumnValueFilter = null;
-            if(filter != null) {
-                singleColumnValueFilter = (SingleColumnValueFilter)filter;
-            }
-            List<Filter> filters = new ArrayList<Filter>();
-            filters.add(singleColumnValueFilter);
-            testEntities = nativeHbaseDao.getDataByRowkeys(TestEntity.class,rowKeyEntities, "mesa:mds_seller_order_buyer_item_info");
+//            Filter filter = nativeHbaseDao.getOutFilter(SingleColumnValueFilter.class,"cf",
+//                    "actionType", CompareFilter.CompareOp.EQUAL,
+//                    "103");
+//            SingleColumnValueFilter singleColumnValueFilter = null;
+//            if(filter != null) {
+//                singleColumnValueFilter = (SingleColumnValueFilter)filter;
+//            }
+//            List<Filter> filters = new ArrayList<Filter>();
+//            filters.add(singleColumnValueFilter);
+            testEntities = nativeHbaseDao.scanDataByAscRowkeys(TestEntity.class,"mesa:ods_buyer_bhv_info_n", "994096987_999332656_9223370522686600673","994096987_999332656",2L);
             System.out.println(i+"  "+testEntities.toString());
         } catch (Exception e) {
             e.printStackTrace();

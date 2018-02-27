@@ -248,9 +248,9 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                 LOGGER.error("not found data：" + rowkey);
                 continue;
             }
-            if(!rowkey.startsWith(startRowKey)) {
-                continue;
-            }
+//            if(!rowkey.startsWith(startRowKey)) {
+//                continue;
+//            }
             Object object = convertToEntity(rowkey,clazz,result);
             if(object == null) {
                 LOGGER.error("can't new instance object: " + clazz);

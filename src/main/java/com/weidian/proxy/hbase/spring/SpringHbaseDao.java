@@ -92,7 +92,7 @@ public  class SpringHbaseDao<T> extends BaseHbaseDao<T>{
                 List<T> objects = new ArrayList<T>();
                 List<Filter> filters = new ArrayList<>(2);
                 filters.add(new PageFilter(limit));
-
+                filters.add(new PrefixFilter(prefixRowkey.getBytes()));
                 if(outFilters != null && outFilters.size() > 0) {
                     filters.addAll(outFilters);
                 }

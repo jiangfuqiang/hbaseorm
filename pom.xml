@@ -4,10 +4,10 @@
 
   <groupId>dihbase</groupId>
   <artifactId>dihbase</artifactId>
-  <version>1.3-SNAPSHOT</version>
+  <version>1.4-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>dihbase</name>
+  <name>hbaseorm</name>
   <url>http://maven.apache.org</url>
 
   <properties>

@@ -403,13 +403,24 @@ public abstract class BaseHbaseDao<T> {
         } catch (Exception e) {
             LOGGER.error(e.getMessage(),e);
         }
+        long timestamp = 0;
         for(Cell cell : cells) {
             byte[] value = cell.getValue();
             String qualifier = Bytes.toString(cell.getQualifier());
             try {
                 reflectT(object,clazz,cell,value,qualifier);
+                if(timestamp < cell.getTimestamp()) {
+                    timestamp = cell.getTimestamp();
+                }
             } catch (Exception e) {
                 LOGGER.error(e.getMessage() + " " + qualifier + " " + rowkey,e);
+            }
+        }
+        if(timestamp != 0) {
+            try {
+                reflectT(object,clazz,null,Bytes.toBytes(timestamp),"timestamp");
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
         return object;

@@ -52,7 +52,7 @@ public abstract class BaseHbaseDao<T> {
         return object;
     }
 
-    protected Object reflectT(Object object, Class clazz, Cell cell,byte[] value, String colName) throws Exception{
+    protected Object reflectT(Object object, Class clazz, Cell cell,byte[] value, String colName,Object[] values) throws Exception{
 
 
             try {
@@ -107,8 +107,8 @@ public abstract class BaseHbaseDao<T> {
 
                 Class[] parameterTypes = method.getParameterTypes();
 
-                Object[] values = new Object[parameterTypes.length];
-                if(parameterTypes.length > 0) {
+                if(values == null && parameterTypes.length > 0) {
+                    values = new Object[parameterTypes.length];
                     int index = 0;
                     for(Class ctClass : parameterTypes) {
                         try {
@@ -398,8 +398,10 @@ public abstract class BaseHbaseDao<T> {
             return null;
         }
 
+        Object[] values = new Object[1];
+        values[0] = rowkey;
         try {
-            reflectT(object, clazz, null, Bytes.toBytes(rowkey), "rowkey");
+            reflectT(object, clazz, null, Bytes.toBytes(rowkey), "rowkey",values);
         } catch (Exception e) {
             LOGGER.error(e.getMessage(),e);
         }
@@ -408,7 +410,7 @@ public abstract class BaseHbaseDao<T> {
             byte[] value = cell.getValue();
             String qualifier = Bytes.toString(cell.getQualifier());
             try {
-                reflectT(object,clazz,cell,value,qualifier);
+                reflectT(object,clazz,cell,value,qualifier,null);
                 if(timestamp < cell.getTimestamp()) {
                     timestamp = cell.getTimestamp();
                 }
@@ -418,7 +420,8 @@ public abstract class BaseHbaseDao<T> {
         }
         if(timestamp != 0) {
             try {
-                reflectT(object,clazz,null,Bytes.toBytes(timestamp),"timestamp");
+                values[0] = timestamp;
+                reflectT(object,clazz,null,Bytes.toBytes(timestamp),"timestamp",values);
             } catch (Exception e) {
                 e.printStackTrace();
             }
